@@ -21,7 +21,21 @@ const createPost = async (req: Request, res: Response) => {
 
 const getAllPost = async (req: Request, res: Response) => {
   try {
-    const result = await PostServices.getAllPost();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 2;
+    const search = (req.query.search as string) || "";
+    const isFeatured = req.query.isFeatured === "true" ? true : undefined;
+    const tags = req.query.tags ? (req.query.tags as string).split(",") : [];
+    const sort = req.query.sort as string;
+
+    const result = await PostServices.getAllPost({
+      page,
+      limit,
+      search,
+      isFeatured,
+      tags,
+      sort,
+    });
 
     res.status(200).send({
       success: true,

@@ -9,31 +9,117 @@ const createPost = async (payload: Prisma.PostCreateInput): Promise<Post> => {
   return result;
 };
 
-const getAllPost = async () => {
+const getAllPost = async ({
+  page = 1,
+  limit = 2,
+  search,
+  isFeatured,
+  tags,
+  sort,
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isFeatured?: boolean;
+  tags?: string[];
+  sort?: string;
+}) => {
+  console.log(page, limit, search, isFeatured, tags, sort);
+  const where: any = {
+    AND: [
+      search && {
+        OR: [
+          {
+            title: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            content: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            author: {
+              name: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
+      },
+
+      typeof isFeatured === "boolean" && { isFeatured },
+      tags &&
+        tags.length > 0 && {
+          tags: {
+            hasEvery: tags,
+          },
+        },
+    ].filter(Boolean),
+  };
+
   const result = await prisma.post.findMany({
+    skip: limit * (page - 1),
+    take: limit,
     include: {
-        author: {
-            select: {
-                id: true,
-                name: true,
-                email: true
-            }
-        }
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
+    where,
     orderBy: {
-      createdAt: "desc",
+      createdAt: sort && sort === "asc" ? "asc" : "desc",
     },
   });
 
-  return result;
+  const total = await prisma.post.count({ where });
+
+  return {
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+    data: result,
+  };
 };
 
 const getPostById = async (postId: any) => {
-  console.log(postId);
-  const result = await prisma.post.findMany({
-    where: {
-      id: postId,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    return await tx.post.findMany({
+      where: {
+        id: postId,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
   });
 
   return result;

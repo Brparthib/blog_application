@@ -55,6 +55,27 @@ const getUserById = async (req: Request, res: Response) => {
   }
 };
 
+const updateUserById = async (req: Request, res: Response) => {
+  try {
+    const result = await UserServices.updateUserById(
+      Number(req.params.id),
+      req.body
+    );
+
+    res.status(200).send({
+      success: true,
+      message: "User Updated Successfully.",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Something Went Wrong.",
+      data: null,
+    });
+  }
+};
+
 const deleteAllUser = async (req: Request, res: Response) => {
   try {
     const result = await UserServices.deleteAllUser();
@@ -77,5 +98,6 @@ export const UserControllers = {
   createUser,
   getAllUser,
   getUserById,
+  updateUserById,
   deleteAllUser,
 };
