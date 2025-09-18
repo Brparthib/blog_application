@@ -73,7 +73,7 @@ const deleteAllPost = async (req: Request, res: Response) => {
   try {
     const result = await PostServices.deleteAllPost();
 
-    res.status(201).send({
+    res.status(200).send({
       success: true,
       message: "All Users Deleted Successfully.",
       data: result,
@@ -87,9 +87,28 @@ const deleteAllPost = async (req: Request, res: Response) => {
   }
 };
 
+const getBlogStat = async (req: Request, res: Response) => {
+  try {
+    const result = await PostServices.getBlogStat();
+
+    res.status(200).send({
+      success: true,
+      message: "Post Stats Retrieved Successfully.",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Something went wrong!",
+      data: null,
+    });
+  }
+};
+
 export const PostControllers = {
   createPost,
   getAllPost,
   getPostById,
   deleteAllPost,
+  getBlogStat,
 };
